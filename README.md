@@ -117,16 +117,23 @@ stripe listen --forward-to localhost:3001/api/webhook
 
 ## Pricing
 
-| Pack | Credits | Price |
-| --- | --- | --- |
-| Starter | 5 | $15 |
-| Creator | 15 | $29 |
-| Pro | 40 | $59 |
+ScriptDrop is sold as a **monthly subscription**, with an **annual option at
+20% off**. Each plan includes a monthly batch of generations (1 generation = 3
+scripts) plus the full creator toolkit.
 
-One credit = one generation = three scripts. New users get 2 free credits.
-Credits never expire. Pack amounts are defined server-side in
-`backend/src/lib/packs.ts` (the source of truth for charges); the frontend
-display prices in `frontend/src/lib/packs.ts` must be kept in sync.
+| Plan | Generations / mo | Monthly | Annual (per mo) |
+| --- | --- | --- | --- |
+| Starter | 25 | $19 | $15.20 |
+| Creator | 75 | $39 | $31.20 |
+| Pro | 200 | $79 | $63.20 |
+
+New users get 2 free generations. Generations refill each billing period and do
+not roll over. Plans and amounts are defined server-side in
+`backend/src/lib/plans.ts` (the source of truth for charges); the frontend
+display in `frontend/src/lib/packs.ts` must be kept in sync. Checkout uses
+Stripe **subscription** mode (`POST /api/checkout` with `{ planId, interval }`),
+and the webhook grants/refills generations via the idempotent `apply_subscription`
+RPC.
 
 ## Creator toolkit (no API key, no credits)
 

@@ -8,8 +8,21 @@
 create table if not exists profiles (
   id uuid references auth.users(id) on delete cascade primary key,
   email text not null,
+  -- `credits` is the remaining generations in the current billing period.
+  -- New users start with 2 free generations.
   credits integer not null default 2,
   total_credits_purchased integer not null default 0,
+  -- Subscription state.
+  plan text,
+  plan_interval text,
+  subscription_status text,
+  current_period_end timestamptz,
+  created_at timestamptz default now()
+);
+
+-- Idempotency log for Stripe webhook events.
+create table if not exists billing_events (
+  event_id text primary key,
   created_at timestamptz default now()
 );
 
@@ -121,35 +134,53 @@ end;
 $$ language plpgsql security definer set search_path = public;
 
 -- ---------------------------------------------------------------------------
--- RPC: fulfill a paid order atomically and idempotently.
--- Inserting the order first relies on the unique constraint on
--- stripe_session_id: if the webhook is retried, the insert is a no-op and no
--- additional credits are granted.
+-- RPC: apply a subscription's monthly generation grant, idempotently.
+-- Recording the Stripe event id first relies on the billing_events primary key:
+-- if the webhook is retried, the insert is a no-op and no second grant happens.
+-- Sets the period's generation balance to the plan allowance (overwrite, not
+-- increment) so renewals refill rather than stack.
 -- ---------------------------------------------------------------------------
 
-create or replace function fulfill_order(
+create or replace function apply_subscription(
+  p_event_id text,
   p_user_id uuid,
-  p_stripe_session_id text,
-  p_pack_name text,
-  p_credits_added integer,
-  p_amount_cents integer
+  p_plan text,
+  p_interval text,
+  p_generations integer,
+  p_status text
 )
 returns void as $$
 declare
   inserted_count integer;
 begin
-  insert into orders (user_id, stripe_session_id, pack_name, credits_added, amount_cents, status)
-  values (p_user_id, p_stripe_session_id, p_pack_name, p_credits_added, p_amount_cents, 'completed')
-  on conflict (stripe_session_id) do nothing;
+  insert into billing_events (event_id) values (p_event_id)
+  on conflict (event_id) do nothing;
 
   get diagnostics inserted_count = row_count;
 
-  -- Only grant credits if this is the first time we've seen this session.
+  -- Only apply if this is the first time we've seen this event.
   if inserted_count = 1 then
     update profiles
-    set credits = credits + p_credits_added,
-        total_credits_purchased = total_credits_purchased + p_credits_added
+    set credits = p_generations,
+        plan = p_plan,
+        plan_interval = p_interval,
+        subscription_status = p_status,
+        total_credits_purchased = total_credits_purchased + p_generations
     where id = p_user_id;
   end if;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+-- ---------------------------------------------------------------------------
+-- RPC: update subscription status (e.g. on cancellation).
+-- ---------------------------------------------------------------------------
+
+create or replace function set_subscription_status(
+  p_user_id uuid,
+  p_status text
+)
+returns void as $$
+begin
+  update profiles set subscription_status = p_status where id = p_user_id;
 end;
 $$ language plpgsql security definer set search_path = public;

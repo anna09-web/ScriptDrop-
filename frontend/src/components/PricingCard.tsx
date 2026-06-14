@@ -1,55 +1,71 @@
-import type { DisplayPack } from '../lib/packs';
+import {
+  formatUsd,
+  monthlyEquivalentCents,
+  totalCents,
+  type BillingInterval,
+  type Plan,
+} from '../lib/packs';
 
 interface PricingCardProps {
-  pack: DisplayPack;
+  plan: Plan;
+  interval: BillingInterval;
   ctaLabel: string;
-  onSelect: (packId: DisplayPack['id']) => void;
+  onSelect: (planId: Plan['id']) => void;
   busy?: boolean;
 }
 
-export function PricingCard({ pack, ctaLabel, onSelect, busy }: PricingCardProps) {
+export function PricingCard({
+  plan,
+  interval,
+  ctaLabel,
+  onSelect,
+  busy,
+}: PricingCardProps) {
+  const perMonth = monthlyEquivalentCents(plan, interval);
+
   return (
     <div
       className={`relative flex flex-col gap-5 rounded-card border bg-bg-card p-6 ${
-        pack.highlighted ? 'border-accent' : 'border-border'
+        plan.highlighted ? 'border-accent' : 'border-border'
       }`}
     >
-      {pack.highlighted && (
+      {plan.highlighted && (
         <span className="absolute -top-3 left-6 rounded-full bg-accent px-3 py-0.5 text-xs font-semibold text-black">
           Most popular
         </span>
       )}
 
       <div>
-        <h3 className="font-display text-xl font-bold">{pack.name}</h3>
-        <p className="mt-1 text-sm text-text-muted">{pack.blurb}</p>
+        <h3 className="font-display text-xl font-bold">{plan.name}</h3>
+        <p className="mt-1 text-sm text-text-muted">{plan.blurb}</p>
       </div>
 
-      <div className="flex items-end gap-2">
-        <span className="font-display text-4xl font-bold">{pack.price}</span>
-        <span className="pb-1 text-sm text-text-muted">one-time</span>
+      <div>
+        <div className="flex items-end gap-2">
+          <span className="font-display text-4xl font-bold">{formatUsd(perMonth)}</span>
+          <span className="pb-1 text-sm text-text-muted">/mo</span>
+        </div>
+        <p className="mt-1 text-xs text-text-faint">
+          {interval === 'year'
+            ? `billed ${formatUsd(totalCents(plan, 'year'))} per year`
+            : 'billed monthly · cancel anytime'}
+        </p>
       </div>
 
       <ul className="space-y-2 text-sm text-text-primary">
-        <li className="flex items-center gap-2">
-          <Check /> {pack.credits} credits
-        </li>
-        <li className="flex items-center gap-2">
-          <Check /> {pack.credits * 3} scripts total
-        </li>
-        <li className="flex items-center gap-2">
-          <Check /> Credits never expire
-        </li>
+        {plan.features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2">
+            <Check /> {feature}
+          </li>
+        ))}
       </ul>
 
       <button
         type="button"
-        onClick={() => onSelect(pack.id)}
+        onClick={() => onSelect(plan.id)}
         disabled={busy}
         className={
-          pack.highlighted
-            ? 'btn-primary mt-auto w-full'
-            : 'btn-ghost mt-auto w-full'
+          plan.highlighted ? 'btn-primary mt-auto w-full' : 'btn-ghost mt-auto w-full'
         }
       >
         {busy ? 'Starting checkout…' : ctaLabel}
@@ -65,7 +81,7 @@ function Check() {
       height="16"
       viewBox="0 0 16 16"
       fill="none"
-      className="shrink-0 text-accent"
+      className="mt-0.5 shrink-0 text-accent"
       aria-hidden
     >
       <path

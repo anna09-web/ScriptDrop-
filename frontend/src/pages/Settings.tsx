@@ -82,7 +82,7 @@ export default function Settings() {
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-text-muted">Credit balance</span>
+              <span className="text-sm text-text-muted">Generations left this period</span>
               <CreditBadge credits={profile?.credits ?? null} loading={loading} />
             </div>
           </div>

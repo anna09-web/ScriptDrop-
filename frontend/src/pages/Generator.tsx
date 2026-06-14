@@ -7,6 +7,7 @@ import { HookAnalyzer } from '../components/tools/HookAnalyzer';
 import { HashtagGenerator } from '../components/tools/HashtagGenerator';
 import { IdeaSpinner } from '../components/tools/IdeaSpinner';
 import { BestTimes } from '../components/tools/BestTimes';
+import { ViewAnalyzer } from '../components/tools/ViewAnalyzer';
 import { useCredits } from '../hooks/useCredits';
 import { useToast } from '../components/Toast';
 import { api, ApiError, type Script } from '../lib/api';
@@ -14,7 +15,7 @@ import { HOOK_STYLES, PLATFORMS, TONES } from '../lib/packs';
 
 const MAX_CHARS = 500;
 
-type Tab = 'scripts' | 'hooks' | 'hashtags' | 'ideas' | 'times';
+type Tab = 'scripts' | 'hooks' | 'hashtags' | 'ideas' | 'times' | 'views';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'scripts', label: 'Script Generator' },
@@ -22,6 +23,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'hashtags', label: 'Hashtags' },
   { id: 'ideas', label: 'Idea Spinner' },
   { id: 'times', label: 'Best Times' },
+  { id: 'views', label: 'View Analyzer' },
 ];
 
 export default function Generator() {
@@ -66,6 +68,7 @@ export default function Generator() {
       {tab === 'hashtags' && <HashtagGenerator />}
       {tab === 'ideas' && <IdeaSpinner />}
       {tab === 'times' && <BestTimes />}
+      {tab === 'views' && <ViewAnalyzer />}
     </AppLayout>
   );
 }
@@ -104,7 +107,7 @@ function ScriptGenerator() {
       await refresh();
     } catch (err) {
       if (err instanceof ApiError && err.status === 402) {
-        setError('You’re out of credits. Grab a pack to keep generating.');
+        setError('You’ve used your generations for this period. Upgrade your plan to keep going.');
         await refresh();
       } else {
         const message =
@@ -169,7 +172,7 @@ function ScriptGenerator() {
 
           {outOfCredits ? (
             <Link to="/pricing" className="btn-primary w-full">
-              Buy credits
+              See plans
             </Link>
           ) : (
             <button
@@ -253,13 +256,13 @@ function EmptyState() {
 function Paywall() {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center rounded-card border border-border bg-bg/80 p-10 text-center backdrop-blur-sm">
-      <p className="font-display text-xl font-bold">You’re out of credits.</p>
+      <p className="font-display text-xl font-bold">You’re out of generations.</p>
       <p className="mt-2 max-w-sm text-text-muted">
-        Top up to keep generating. Credits never expire, so a pack lasts as long
-        as you need.
+        You’ve used everything in this billing period. Upgrade for more — or your
+        plan refills at the start of the next cycle.
       </p>
       <Link to="/pricing" className="btn-primary mt-6">
-        See credit packs
+        See plans
       </Link>
     </div>
   );

@@ -94,9 +94,9 @@ export const api = {
       body: input,
     }),
 
-  checkout: (packId: string) =>
+  checkout: (planId: string, interval: 'month' | 'year') =>
     request<{ url: string }>('/api/checkout', {
       method: 'POST',
-      body: { packId },
+      body: { planId, interval },
     }),
 };

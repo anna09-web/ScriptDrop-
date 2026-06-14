@@ -28,17 +28,22 @@ export default function Terms() {
         </p>
       </LegalSection>
 
-      <LegalSection heading="3. Credits, payments, and refunds">
+      <LegalSection heading="3. Subscriptions, billing, and refunds">
         <p>
-          ScriptDrop sells credits in one-time packs. Each generation consumes
-          one credit and produces three scripts. New accounts receive a small
-          number of free credits to try the Service.
+          ScriptDrop is sold as a recurring subscription, billed monthly or
+          annually. Each plan includes a set number of script generations per
+          billing period (each generation produces three scripts) plus access to
+          the creator toolkit. New accounts receive a small number of free
+          generations to try the Service.
         </p>
         <p>
-          Credits do not expire. Credits have no cash value and are
-          non-transferable. Used credits are non-refundable. Unused credits may
-          be refunded upon request within seven (7) days of purchase. To request
-          a refund of unused credits, contact us using the details below.
+          Your subscription renews automatically at the end of each billing
+          period until you cancel. You can cancel anytime; cancellation stops
+          future renewals and you keep access until the end of the period you
+          have already paid for. Included generations do not roll over between
+          periods. Payments are non-refundable except where required by law,
+          though we will consider good-faith refund requests made within seven
+          (7) days of a charge. Contact us using the details below.
         </p>
       </LegalSection>
 

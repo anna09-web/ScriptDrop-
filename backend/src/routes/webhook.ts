@@ -8,6 +8,29 @@ import { supabaseAdmin } from '../lib/supabase.js';
 export const webhookRouter = Router();
 
 /**
+ * Applies a subscription's monthly generation grant idempotently. The RPC keys
+ * on the Stripe event id, so retried webhooks never double-grant.
+ */
+async function applySubscription(params: {
+  eventId: string;
+  userId: string;
+  planId: string;
+  interval: string;
+  generations: number;
+  status: string;
+}): Promise<{ error: unknown }> {
+  const { error } = await supabaseAdmin.rpc('apply_subscription', {
+    p_event_id: params.eventId,
+    p_user_id: params.userId,
+    p_plan: params.planId,
+    p_interval: params.interval,
+    p_generations: params.generations,
+    p_status: params.status,
+  });
+  return { error };
+}
+
+/**
  * Stripe webhook. The raw body is required for signature verification, so the
  * express.raw() body parser is applied to this path in index.ts BEFORE the
  * global express.json() parser.
@@ -22,7 +45,6 @@ webhookRouter.post('/', async (req: Request, res: Response) => {
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
-      // req.body is a Buffer here thanks to express.raw().
       req.body as Buffer,
       signature,
       env.stripeWebhookSecret,
@@ -32,37 +54,78 @@ webhookRouter.post('/', async (req: Request, res: Response) => {
     return;
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const userId = session.metadata?.user_id ?? session.client_reference_id ?? '';
-    const packName = session.metadata?.pack_name ?? 'Unknown';
-    const credits = Number(session.metadata?.credits ?? '0');
-    const amountCents = session.amount_total ?? 0;
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (session.mode === 'subscription') {
+        const userId =
+          session.metadata?.user_id ?? session.client_reference_id ?? '';
+        const planId = session.metadata?.plan_id ?? '';
+        const interval = session.metadata?.interval ?? 'month';
+        const generations = Number(session.metadata?.generations ?? '0');
 
-    if (!userId || credits <= 0) {
-      // Nothing actionable, but acknowledge so Stripe stops retrying.
-      res.json({ received: true });
-      return;
+        if (userId && generations > 0) {
+          const { error } = await applySubscription({
+            eventId: event.id,
+            userId,
+            planId,
+            interval,
+            generations,
+            status: 'active',
+          });
+          if (error) {
+            res.status(500).send('Fulfillment failed.');
+            return;
+          }
+        }
+      }
+    } else if (event.type === 'invoice.paid') {
+      // Renewal: refill the monthly generation grant. Skip the first invoice
+      // (subscription_create) since checkout.session.completed already granted.
+      const invoice = event.data.object as Stripe.Invoice;
+      if (invoice.billing_reason === 'subscription_cycle' && invoice.subscription) {
+        const subscriptionId =
+          typeof invoice.subscription === 'string'
+            ? invoice.subscription
+            : invoice.subscription.id;
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        const userId = sub.metadata?.user_id ?? '';
+        const planId = sub.metadata?.plan_id ?? '';
+        const generations = Number(sub.metadata?.generations ?? '0');
+
+        if (userId && generations > 0) {
+          const { error } = await applySubscription({
+            eventId: event.id,
+            userId,
+            planId,
+            interval: 'month',
+            generations,
+            status: 'active',
+          });
+          if (error) {
+            res.status(500).send('Renewal failed.');
+            return;
+          }
+        }
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const sub = event.data.object as Stripe.Subscription;
+      const userId = sub.metadata?.user_id ?? '';
+      if (userId) {
+        const { error } = await supabaseAdmin.rpc('set_subscription_status', {
+          p_user_id: userId,
+          p_status: 'canceled',
+        });
+        if (error) {
+          res.status(500).send('Cancellation update failed.');
+          return;
+        }
+      }
     }
-
-    // Atomic, idempotent credit grant keyed on the unique Stripe session id.
-    // The RPC inserts the order (unique constraint guards double-processing of
-    // retried webhooks) and adds credits in a single transaction.
-    const { error } = await supabaseAdmin.rpc('fulfill_order', {
-      p_user_id: userId,
-      p_stripe_session_id: session.id,
-      p_pack_name: packName,
-      p_credits_added: credits,
-      p_amount_cents: amountCents,
-    });
-
-    if (error) {
-      // Returning 500 makes Stripe retry, which is safe because fulfill_order
-      // is idempotent on stripe_session_id.
-      console.error('Order fulfillment failed; Stripe will retry.');
-      res.status(500).send('Fulfillment failed.');
-      return;
-    }
+  } catch {
+    // Returning 500 makes Stripe retry; our RPCs are idempotent on event id.
+    res.status(500).send('Webhook handling failed.');
+    return;
   }
 
   res.json({ received: true });

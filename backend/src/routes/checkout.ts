@@ -3,28 +3,36 @@ import type { Response } from 'express';
 import type { AuthedRequest } from '../middleware/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import { stripe } from '../lib/stripe.js';
-import { getPack } from '../lib/packs.js';
+import { getPlan, amountForInterval, isInterval } from '../lib/plans.js';
 import { env } from '../lib/env.js';
 
 export const checkoutRouter = Router();
 
 interface CheckoutBody {
-  packId?: unknown;
+  planId?: unknown;
+  interval?: unknown;
 }
 
 checkoutRouter.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
   const user = req.user!;
   const body = req.body as CheckoutBody;
 
-  const pack = getPack(String(body.packId ?? ''));
-  if (!pack) {
-    res.status(400).json({ error: 'Unknown credit pack.' });
+  const plan = getPlan(String(body.planId ?? ''));
+  if (!plan) {
+    res.status(400).json({ error: 'Unknown plan.' });
+    return;
+  }
+  const interval = body.interval;
+  if (!isInterval(interval)) {
+    res.status(400).json({ error: 'Invalid billing interval.' });
     return;
   }
 
+  const amount = amountForInterval(plan, interval);
+
   try {
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: 'subscription',
       payment_method_types: ['card'],
       // Trust the user identity from the verified JWT, never the request body.
       client_reference_id: user.id,
@@ -34,18 +42,29 @@ checkoutRouter.post('/', requireAuth, async (req: AuthedRequest, res: Response) 
           quantity: 1,
           price_data: {
             currency: 'usd',
-            unit_amount: pack.amountCents,
+            unit_amount: amount,
+            recurring: { interval },
             product_data: {
-              name: `ScriptDrop ${pack.name} — ${pack.credits} credits`,
+              name: `ScriptDrop ${plan.name} (${interval === 'year' ? 'annual' : 'monthly'})`,
             },
           },
         },
       ],
+      // Metadata is mirrored onto the subscription so renewal invoices can
+      // recompute the monthly generation grant.
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+          plan_id: plan.id,
+          generations: String(plan.monthlyGenerations),
+        },
+      },
       metadata: {
         user_id: user.id,
-        pack_id: pack.id,
-        pack_name: pack.name,
-        credits: String(pack.credits),
+        plan_id: plan.id,
+        plan_name: plan.name,
+        interval,
+        generations: String(plan.monthlyGenerations),
       },
       success_url: `${env.frontendUrl}/app?success=true`,
       cancel_url: `${env.frontendUrl}/pricing?canceled=true`,
