@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Logo } from '../components/Logo';
 import { GoogleButton } from '../components/GoogleButton';
+import { ConfigNotice } from '../components/ConfigNotice';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -51,6 +52,8 @@ export default function Login() {
           Log in to keep your credits and history.
         </p>
 
+        {!isSupabaseConfigured && <div className="mt-5"><ConfigNotice /></div>}
+
         <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
           <div>
             <label htmlFor="email" className="mb-1 block text-sm text-text-muted">
@@ -90,7 +93,11 @@ export default function Login() {
             </p>
           )}
 
-          <button type="submit" disabled={submitting} className="btn-primary w-full">
+          <button
+            type="submit"
+            disabled={submitting || !isSupabaseConfigured}
+            className="btn-primary w-full"
+          >
             {submitting ? 'Logging in…' : 'Log in'}
           </button>
         </form>

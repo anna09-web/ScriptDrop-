@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Logo } from '../components/Logo';
 import { GoogleButton } from '../components/GoogleButton';
+import { ConfigNotice } from '../components/ConfigNotice';
 import { useToast } from '../components/Toast';
 
 export default function Signup() {
@@ -54,6 +55,8 @@ export default function Signup() {
         <h1 className="font-display text-2xl font-bold">Create your account</h1>
         <p className="mt-1 text-sm text-accent">You get 2 free scripts to start.</p>
 
+        {!isSupabaseConfigured && <div className="mt-5"><ConfigNotice /></div>}
+
         <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
           <div>
             <label htmlFor="email" className="mb-1 block text-sm text-text-muted">
@@ -93,7 +96,11 @@ export default function Signup() {
             </p>
           )}
 
-          <button type="submit" disabled={submitting} className="btn-primary w-full">
+          <button
+            type="submit"
+            disabled={submitting || !isSupabaseConfigured}
+            className="btn-primary w-full"
+          >
             {submitting ? 'Creating account…' : 'Create account'}
           </button>
         </form>
