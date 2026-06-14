@@ -119,12 +119,28 @@ stripe listen --forward-to localhost:3001/api/webhook
 
 | Pack | Credits | Price |
 | --- | --- | --- |
-| Starter | 5 | $9 |
-| Creator | 15 | $19 |
-| Pro | 40 | $39 |
+| Starter | 5 | $15 |
+| Creator | 15 | $29 |
+| Pro | 40 | $59 |
 
 One credit = one generation = three scripts. New users get 2 free credits.
-Credits never expire.
+Credits never expire. Pack amounts are defined server-side in
+`backend/src/lib/packs.ts` (the source of truth for charges); the frontend
+display prices in `frontend/src/lib/packs.ts` must be kept in sync.
+
+## Free creator toolkit (no API key, no credits)
+
+Alongside the metered AI script generator, the `/app` page includes four
+fully client-side tools that cost nothing to serve and never touch the
+Anthropic API:
+
+- **Hook Analyzer** — heuristic 0–100 score for a hook with actionable fixes.
+- **Hashtag Generator** — broad / niche / long-tail tag mix per platform.
+- **Idea Spinner** — ten content angles for any product from template banks.
+- **Best Time to Post** — general engagement windows by day and platform.
+
+All four live in `frontend/src/lib/toolkit.ts` (pure functions) and
+`frontend/src/components/tools/`.
 
 ## Deployment
 

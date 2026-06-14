@@ -80,6 +80,30 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Free toolkit */}
+      <section className="border-t border-border bg-bg-card">
+        <div className="mx-auto max-w-6xl px-4 py-24">
+          <p className="text-sm font-medium uppercase tracking-widest text-accent">
+            Included free with every account
+          </p>
+          <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
+            Not just scripts. A whole filming toolkit.
+          </h2>
+          <p className="mt-3 max-w-xl text-text-muted">
+            These run right in your browser — no credits, no limits. They’re
+            yours the moment you sign up.
+          </p>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {TOOLKIT.map((tool) => (
+              <div key={tool.title} className="card p-5">
+                <h3 className="font-display text-lg font-bold">{tool.title}</h3>
+                <p className="mt-2 text-sm text-text-muted">{tool.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-24">
@@ -88,7 +112,9 @@ export default function Landing() {
           </h2>
           <p className="mt-3 max-w-xl text-text-muted">
             One credit makes one generation, which gives you three scripts. No
-            subscription, no auto-renew. Credits never expire.
+            subscription, no auto-renew. Credits never expire — and the hook
+            analyzer, hashtag generator, idea spinner, and posting-time guide are
+            free forever.
           </p>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {PACKS.map((pack) => (
@@ -200,6 +226,25 @@ If you've tried everything, try this before you give up. Follow for more — I p
     </div>
   );
 }
+
+const TOOLKIT = [
+  {
+    title: 'Hook Analyzer',
+    body: 'Paste your first line and get a scroll-stopping score with fixes — instantly.',
+  },
+  {
+    title: 'Hashtag Generator',
+    body: 'A balanced mix of broad, niche, and long-tail tags for each platform.',
+  },
+  {
+    title: 'Idea Spinner',
+    body: 'Ten ready-to-film content angles for any product, one click away.',
+  },
+  {
+    title: 'Best Time to Post',
+    body: 'Engagement windows by day for TikTok, Reels, and Shorts.',
+  },
+];
 
 const TESTIMONIALS = [
   {

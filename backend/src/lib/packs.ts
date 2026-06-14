@@ -11,9 +11,9 @@ export interface CreditPack {
  * pack up here by id when creating a Stripe Checkout session.
  */
 export const CREDIT_PACKS: Record<CreditPack['id'], CreditPack> = {
-  starter: { id: 'starter', name: 'Starter', credits: 5, amountCents: 900 },
-  creator: { id: 'creator', name: 'Creator', credits: 15, amountCents: 1900 },
-  pro: { id: 'pro', name: 'Pro', credits: 40, amountCents: 3900 },
+  starter: { id: 'starter', name: 'Starter', credits: 5, amountCents: 1500 },
+  creator: { id: 'creator', name: 'Creator', credits: 15, amountCents: 2900 },
+  pro: { id: 'pro', name: 'Pro', credits: 40, amountCents: 5900 },
 };
 
 export function getPack(id: string): CreditPack | undefined {
