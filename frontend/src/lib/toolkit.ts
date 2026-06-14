@@ -249,6 +249,150 @@ export interface PostingWindow {
   windows: string[];
 }
 
+/* ------------------------------------------------------------------ */
+/* View Analyzer                                                       */
+/* ------------------------------------------------------------------ */
+
+export interface VideoStats {
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  /** Average percentage of the video watched, 0–100. */
+  avgWatchPercent: number;
+  /** New follows gained from this video. */
+  follows: number;
+}
+
+export type MetricVerdict = 'good' | 'ok' | 'poor';
+
+export interface VideoMetric {
+  label: string;
+  value: string;
+  verdict: MetricVerdict;
+  note: string;
+}
+
+export interface VideoAnalysis {
+  score: number;
+  rating: 'Flopped' | 'Underperformed' | 'Solid' | 'Went off';
+  metrics: VideoMetric[];
+  wins: string[];
+  fixes: string[];
+}
+
+function pct(n: number): string {
+  return `${(n * 100).toFixed(n < 0.01 ? 2 : 1)}%`;
+}
+
+function verdict(
+  value: number,
+  okAt: number,
+  goodAt: number,
+): MetricVerdict {
+  if (value >= goodAt) return 'good';
+  if (value >= okAt) return 'ok';
+  return 'poor';
+}
+
+export function analyzeVideo(stats: VideoStats): VideoAnalysis {
+  const views = Math.max(0, stats.views);
+  const safeViews = views > 0 ? views : 1;
+
+  const likeRate = stats.likes / safeViews;
+  const commentRate = stats.comments / safeViews;
+  const shareRate = stats.shares / safeViews;
+  const saveRate = stats.saves / safeViews;
+  const followRate = stats.follows / safeViews;
+  const watch = Math.min(100, Math.max(0, stats.avgWatchPercent)) / 100;
+
+  const metrics: VideoMetric[] = [
+    {
+      label: 'Watch-through',
+      value: `${(watch * 100).toFixed(0)}%`,
+      verdict: verdict(watch, 0.3, 0.5),
+      note: 'How much of the video people watch. This drives reach more than anything else.',
+    },
+    {
+      label: 'Like rate',
+      value: pct(likeRate),
+      verdict: verdict(likeRate, 0.04, 0.08),
+      note: 'Likes ÷ views. A quick read on whether it landed.',
+    },
+    {
+      label: 'Comment rate',
+      value: pct(commentRate),
+      verdict: verdict(commentRate, 0.001, 0.005),
+      note: 'Comments ÷ views. Conversation tells the algorithm it’s worth pushing.',
+    },
+    {
+      label: 'Share rate',
+      value: pct(shareRate),
+      verdict: verdict(shareRate, 0.003, 0.01),
+      note: 'Shares ÷ views. The strongest signal of reach.',
+    },
+    {
+      label: 'Save rate',
+      value: pct(saveRate),
+      verdict: verdict(saveRate, 0.003, 0.01),
+      note: 'Saves ÷ views. Means it’s useful enough to come back to.',
+    },
+    {
+      label: 'Follow rate',
+      value: pct(followRate),
+      verdict: verdict(followRate, 0.001, 0.005),
+      note: 'Follows ÷ views. Did this turn viewers into your audience?',
+    },
+  ];
+
+  const weights: Record<string, number> = {
+    'Watch-through': 30,
+    'Like rate': 15,
+    'Comment rate': 12,
+    'Share rate': 18,
+    'Save rate': 15,
+    'Follow rate': 10,
+  };
+  let score = 0;
+  for (const m of metrics) {
+    const w = weights[m.label] ?? 0;
+    score += m.verdict === 'good' ? w : m.verdict === 'ok' ? w * 0.55 : 0;
+  }
+  score = Math.round(Math.max(0, Math.min(100, score)));
+
+  let rating: VideoAnalysis['rating'] = 'Flopped';
+  if (score >= 80) rating = 'Went off';
+  else if (score >= 55) rating = 'Solid';
+  else if (score >= 30) rating = 'Underperformed';
+
+  const FIX_TIPS: Record<string, string> = {
+    'Watch-through':
+      'People are dropping early — tighten your first 3 seconds and cut the slow intro.',
+    'Like rate':
+      'Give a clearer payoff. A flat reaction means the value or punchline wasn’t obvious.',
+    'Comment rate':
+      'Ask one specific question or drop a mild hot take to spark replies.',
+    'Share rate':
+      'Add a “send this to someone who…” line so viewers tag a friend.',
+    'Save rate':
+      'Make it save-worthy: a quick list, a tip, or a step-by-step they’ll want later.',
+    'Follow rate':
+      'End with a concrete reason to follow (“part 2 tomorrow”, “I post one of these daily”).',
+  };
+
+  const wins = metrics
+    .filter((m) => m.verdict === 'good')
+    .map((m) => `${m.label} is strong (${m.value}).`);
+
+  const fixes = metrics
+    .filter((m) => m.verdict === 'poor')
+    .map((m) => FIX_TIPS[m.label])
+    .slice(0, 4);
+
+  return { score, rating, metrics, wins, fixes };
+}
+
 // General, widely-cited engagement windows (local time). A guide, not a guarantee.
 export const BEST_TIMES: Record<Platform, PostingWindow[]> = {
   TikTok: [

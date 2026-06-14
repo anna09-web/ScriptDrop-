@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { Footer } from '../components/Footer';
 import { PricingCard } from '../components/PricingCard';
-import { PACKS } from '../lib/packs';
+import { IntervalToggle } from '../components/IntervalToggle';
+import { PLANS, type BillingInterval } from '../lib/packs';
 import { useAuth } from '../hooks/useAuth';
 
 export default function Landing() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const appHref = session ? '/app' : '/signup';
+  const [interval, setInterval] = useState<BillingInterval>('month');
 
   return (
     <div className="min-h-screen bg-bg">
@@ -122,19 +125,23 @@ export default function Landing() {
       <section id="pricing" className="border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-24">
           <h2 className="font-display text-3xl font-bold sm:text-4xl">
-            Pay once. Use whenever.
+            One plan. Everything unlocked.
           </h2>
           <p className="mt-3 max-w-xl text-text-muted">
-            One credit makes one generation, which gives you three scripts. No
-            subscription, no auto-renew. Credits never expire — and every plan
-            unlocks the full creator toolkit: Hook Analyzer, Hashtag Generator,
-            Best Time to Post, and unlimited idea spins.
+            Every plan includes a monthly batch of script generations plus the
+            full creator toolkit: Hook Analyzer, Hashtag Generator, Best Time to
+            Post, View Analyzer, and unlimited idea spins. Cancel anytime — or
+            save 20% with annual billing.
           </p>
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {PACKS.map((pack) => (
+          <div className="mt-8">
+            <IntervalToggle interval={interval} onChange={setInterval} />
+          </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {PLANS.map((plan) => (
               <PricingCard
-                key={pack.id}
-                pack={pack}
+                key={plan.id}
+                plan={plan}
+                interval={interval}
                 ctaLabel="Get started"
                 onSelect={() => navigate(appHref)}
               />
@@ -305,8 +312,8 @@ const STEPS = [
 
 const FAQS = [
   {
-    q: 'Do credits expire?',
-    a: 'No. Buy a pack whenever, use it whenever. Credits sit in your account until you spend them.',
+    q: 'Can I cancel anytime?',
+    a: 'Yes. Plans are month-to-month (or annual if you want 20% off). Cancel whenever and you keep access until the end of the period you paid for.',
   },
   {
     q: 'Is this actually different from ChatGPT?',
@@ -317,8 +324,8 @@ const FAQS = [
     a: 'TikTok, Instagram Reels, and YouTube Shorts. The CTA and pacing adjust to whichever you pick.',
   },
   {
-    q: 'How many scripts do I get per credit?',
-    a: 'One credit produces one generation, and every generation gives you three distinct scripts to choose from.',
+    q: 'How many scripts do I get?',
+    a: 'Each plan includes a set number of generations per month, and every generation gives you three distinct scripts — so the Starter plan’s 25 generations is 75 scripts a month.',
   },
   {
     q: 'Can I use the scripts commercially?',

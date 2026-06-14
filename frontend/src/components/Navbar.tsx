@@ -54,7 +54,7 @@ export function Navbar() {
                 className="absolute right-0 mt-2 w-48 animate-fade-in overflow-hidden rounded-lg border border-border bg-bg-elevated py-1 shadow-xl"
               >
                 <MenuLink to="/pricing" onClick={() => setOpen(false)}>
-                  Buy credits
+                  Plans &amp; billing
                 </MenuLink>
                 <MenuLink to="/history" onClick={() => setOpen(false)}>
                   My history
