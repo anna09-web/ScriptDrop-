@@ -101,6 +101,9 @@ export default function Landing() {
               </div>
             ))}
           </div>
+          <Link to="/tools" className="btn-ghost mt-8">
+            Try the free tools →
+          </Link>
         </div>
       </section>
 
@@ -168,6 +171,12 @@ function MarketingNav({
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Logo />
         <div className="flex items-center gap-3">
+          <Link
+            to="/tools"
+            className="hidden text-sm text-text-muted transition-colors hover:text-text-primary sm:inline"
+          >
+            Free tools
+          </Link>
           <a
             href="#pricing"
             className="hidden text-sm text-text-muted transition-colors hover:text-text-primary sm:inline"
