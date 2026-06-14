@@ -12,9 +12,9 @@ export function ConfigNotice() {
         This deployment is missing its Supabase keys, so accounts are
         unavailable. The{' '}
         <Link to="/tools" className="text-accent hover:underline">
-          free creator tools
+          free Idea Spinner
         </Link>{' '}
-        work without an account. (Set{' '}
+        works without an account. (Set{' '}
         <code className="text-accent">VITE_SUPABASE_URL</code> and{' '}
         <code className="text-accent">VITE_SUPABASE_ANON_KEY</code> in your host
         to enable accounts.)
