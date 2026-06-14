@@ -84,25 +84,36 @@ export default function Landing() {
       <section className="border-t border-border bg-bg-card">
         <div className="mx-auto max-w-6xl px-4 py-24">
           <p className="text-sm font-medium uppercase tracking-widest text-accent">
-            Included free with every account
+            More than scripts
           </p>
           <h2 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
-            Not just scripts. A whole filming toolkit.
+            A whole filming toolkit.
           </h2>
           <p className="mt-3 max-w-xl text-text-muted">
-            These run right in your browser — no credits, no limits. They’re
-            yours the moment you sign up.
+            Try the Content Idea Spinner free — three spins, no account needed.
+            Every plan unlocks the rest, plus the AI script writer.
           </p>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {TOOLKIT.map((tool) => (
               <div key={tool.title} className="card p-5">
-                <h3 className="font-display text-lg font-bold">{tool.title}</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-display text-lg font-bold">{tool.title}</h3>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                      tool.tag === 'Free'
+                        ? 'bg-accent/15 text-accent'
+                        : 'border border-border text-text-muted'
+                    }`}
+                  >
+                    {tool.tag}
+                  </span>
+                </div>
                 <p className="mt-2 text-sm text-text-muted">{tool.body}</p>
               </div>
             ))}
           </div>
           <Link to="/tools" className="btn-ghost mt-8">
-            Try the free tools →
+            Try the Idea Spinner free →
           </Link>
         </div>
       </section>
@@ -115,9 +126,9 @@ export default function Landing() {
           </h2>
           <p className="mt-3 max-w-xl text-text-muted">
             One credit makes one generation, which gives you three scripts. No
-            subscription, no auto-renew. Credits never expire — and the hook
-            analyzer, hashtag generator, idea spinner, and posting-time guide are
-            free forever.
+            subscription, no auto-renew. Credits never expire — and every plan
+            unlocks the full creator toolkit: Hook Analyzer, Hashtag Generator,
+            Best Time to Post, and unlimited idea spins.
           </p>
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {PACKS.map((pack) => (
@@ -238,20 +249,24 @@ If you've tried everything, try this before you give up. Follow for more — I p
 
 const TOOLKIT = [
   {
+    title: 'Idea Spinner',
+    body: 'Ten ready-to-film content angles for any product. Free to try, 3 spins.',
+    tag: 'Free',
+  },
+  {
     title: 'Hook Analyzer',
     body: 'Paste your first line and get a scroll-stopping score with fixes — instantly.',
+    tag: 'Plans',
   },
   {
     title: 'Hashtag Generator',
     body: 'A balanced mix of broad, niche, and long-tail tags for each platform.',
-  },
-  {
-    title: 'Idea Spinner',
-    body: 'Ten ready-to-film content angles for any product, one click away.',
+    tag: 'Plans',
   },
   {
     title: 'Best Time to Post',
     body: 'Engagement windows by day for TikTok, Reels, and Shorts.',
+    tag: 'Plans',
   },
 ];
 

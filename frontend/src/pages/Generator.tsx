@@ -16,12 +16,12 @@ const MAX_CHARS = 500;
 
 type Tab = 'scripts' | 'hooks' | 'hashtags' | 'ideas' | 'times';
 
-const TABS: { id: Tab; label: string; free: boolean }[] = [
-  { id: 'scripts', label: 'Script Generator', free: false },
-  { id: 'hooks', label: 'Hook Analyzer', free: true },
-  { id: 'hashtags', label: 'Hashtags', free: true },
-  { id: 'ideas', label: 'Idea Spinner', free: true },
-  { id: 'times', label: 'Best Times', free: true },
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'scripts', label: 'Script Generator' },
+  { id: 'hooks', label: 'Hook Analyzer' },
+  { id: 'hashtags', label: 'Hashtags' },
+  { id: 'ideas', label: 'Idea Spinner' },
+  { id: 'times', label: 'Best Times' },
 ];
 
 export default function Generator() {
@@ -50,18 +50,13 @@ export default function Generator() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`relative -mb-px flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`relative -mb-px px-4 py-3 text-sm font-medium transition-colors ${
               tab === t.id
                 ? 'border-b-2 border-accent text-text-primary'
                 : 'border-b-2 border-transparent text-text-muted hover:text-text-primary'
             }`}
           >
             {t.label}
-            {t.free && (
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
-                Free
-              </span>
-            )}
           </button>
         ))}
       </div>
@@ -261,8 +256,7 @@ function Paywall() {
       <p className="font-display text-xl font-bold">You’re out of credits.</p>
       <p className="mt-2 max-w-sm text-text-muted">
         Top up to keep generating. Credits never expire, so a pack lasts as long
-        as you need. The Hook Analyzer, Hashtags, Idea Spinner and Best Times
-        tabs stay free.
+        as you need.
       </p>
       <Link to="/pricing" className="btn-primary mt-6">
         See credit packs

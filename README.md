@@ -128,19 +128,22 @@ Credits never expire. Pack amounts are defined server-side in
 `backend/src/lib/packs.ts` (the source of truth for charges); the frontend
 display prices in `frontend/src/lib/packs.ts` must be kept in sync.
 
-## Free creator toolkit (no API key, no credits)
+## Creator toolkit (no API key, no credits)
 
-Alongside the metered AI script generator, the `/app` page includes four
-fully client-side tools that cost nothing to serve and never touch the
-Anthropic API:
-
-- **Hook Analyzer** — heuristic 0–100 score for a hook with actionable fixes.
-- **Hashtag Generator** — broad / niche / long-tail tag mix per platform.
-- **Idea Spinner** — ten content angles for any product from template banks.
-- **Best Time to Post** — general engagement windows by day and platform.
-
-All four live in `frontend/src/lib/toolkit.ts` (pure functions) and
+Four fully client-side tools that cost nothing to serve and never touch the
+Anthropic API. They live in `frontend/src/lib/toolkit.ts` (pure functions) and
 `frontend/src/components/tools/`.
+
+Access model:
+
+- **Idea Spinner** — free to try on the public `/tools` page, capped at **3
+  spins** (tracked in `localStorage`), after which a stop-sign paywall prompts
+  an upgrade. Unlimited inside the app.
+- **Hook Analyzer**, **Hashtag Generator**, **Best Time to Post** — plan
+  features, available as tabs inside the logged-in `/app`.
+
+The `freeLimit` prop on `IdeaSpinner` controls the cap (set on `/tools`, omitted
+in `/app` for unlimited use).
 
 ## Deployment
 
